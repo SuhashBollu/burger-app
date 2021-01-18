@@ -32,6 +32,7 @@ class Checkout extends Component {
 
     checkoutContinuedHandler = () => {
         this.props.history.replace('/check-out/contact-data');
+        // window.scrollTo(0,document.body.scrollHeight);
     }
 
     render() {

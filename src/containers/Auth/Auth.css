@@ -8,6 +8,10 @@
     box-sizing: border-box;
 }
 
+.Auth p{
+    color: red;
+}
+
 
 @media (min-width: 600px){
     .Auth {

@@ -11,7 +11,7 @@ import { Redirect } from 'react-router-dom';
 class Auth extends Component {
 
     state = {
-        controls: {
+        signinControls: {
             email: {
                 elementType: 'input',
                 elementConfig: {
@@ -41,7 +41,52 @@ class Auth extends Component {
                 touched: false
             }
         },
-        isSignup: true
+        signupControls: {
+            email: {
+                elementType: 'input',
+                elementConfig: {
+                    type: 'email',
+                    placeholder: 'Mail Address'
+                },
+                value: '',
+                validation: {
+                    required: true,
+                    isEmail: true
+                },
+                valid: false,
+                touched: false
+            },
+            password: {
+                elementType: 'input',
+                elementConfig: {
+                    type: 'password',
+                    placeholder: 'Password'
+                },
+                value: '',
+                validation: {
+                    required: true,
+                    minLength: 6
+                },
+                valid: false,
+                touched: false
+            },
+            rpassword: {
+                elementType: 'input',
+                elementConfig: {
+                    type: 'password',
+                    placeholder: 'Re-enter password'
+                },
+                value: '',
+                validation: {
+                    required: true,
+                    minLength: 6
+                },
+                valid: false,
+                touched: false
+            }
+        },
+        isSignup: false,
+        errorMessage: null
     }
 
     componentDidMount(){
@@ -80,21 +125,47 @@ class Auth extends Component {
     }
 
     inputChangedHandler = (event, controlName) => {
-        const updatedControls = {
-            ...this.state.controls,
-            [controlName]:{
-                ...this.state.controls[controlName],
-                value: event.target.value,
-                valid: this.checkValidity(event.target.value, this.state.controls[controlName].validation),
-                touched: true
-            }
-        };
-        this.setState({controls: updatedControls});
+        
+        if(this.state.isSignup){
+            const updatedControls = {
+                ...this.state.signupControls,
+                [controlName]:{
+                    ...this.state.signupControls[controlName],
+                    value: event.target.value,
+                    valid: this.checkValidity(event.target.value, this.state.signupControls[controlName].validation),
+                    touched: true
+                }
+            };
+            this.setState({signupControls: updatedControls});
+        }
+        if(!this.state.isSignup){
+            const updatedCon = {
+                ...this.state.signinControls,
+                [controlName]:{
+                    ...this.state.signinControls[controlName],
+                    value: event.target.value,
+                    valid: this.checkValidity(event.target.value, this.state.signinControls[controlName].validation),
+                    touched: true
+                }
+            };
+            this.setState({signinControls: updatedCon});
+        }
+        
     }
 
     submitHandler = (event) => {
         event.preventDefault();
-        this.props.onAuth(this.state.controls.email.value, this.state.controls.password.value, this.state.isSignup);
+        if(this.state.isSignup){
+            if(this.state.signupControls.password.value!==this.state.signupControls.rpassword.value){
+                this.setState({errorMessage:(<p>Passwords are not matching. Please check.</p>)});
+            }else{
+                this.setState({errorMessage: null});
+            this.props.onAuth(this.state.signupControls.email.value, this.state.signupControls.password.value, this.state.isSignup);}
+        }
+        if(!this.state.isSignup){
+            this.props.onAuth(this.state.signinControls.email.value, this.state.signinControls.password.value, this.state.isSignup);
+        }
+        
     }
 
     switchAuthModeHandler = () => {
@@ -108,12 +179,22 @@ class Auth extends Component {
     render() {
 
         const formElementsArray = [];
-        for (let key in this.state.controls) {
-            formElementsArray.push({
-                id: key,
-                config: this.state.controls[key]
-            });
+        if(this.state.isSignup){
+            for (let key in this.state.signupControls) {
+                formElementsArray.push({
+                    id: key,
+                    config: this.state.signupControls[key]
+                });
+            }
+        }else{
+            for (let key in this.state.signinControls) {
+                formElementsArray.push({
+                    id: key,
+                    config: this.state.signinControls[key]
+                });
+            }
         }
+        
 
         let form = formElementsArray.map(formElement => (
             <Input
@@ -133,11 +214,28 @@ class Auth extends Component {
         }
 
         let errorMessage = null;
-
         if(this.props.error){
-            errorMessage = (
-                <p>{this.props.error.message}</p>
-            );
+            console.log(this.props.error.message);
+            switch(this.props.error.message){
+                case 'EMAIL_NOT_FOUND':
+                    console.log(1);
+                    errorMessage = (<p>There is no user record corresponding to this email.</p>);
+                    break;
+                case 'INVALID_PASSWORD':
+                    errorMessage = (<p>Invalid Password.</p>);
+                    break;
+                case 'EMAIL_EXISTS':
+                    errorMessage = (<p>The email address is already in use by another account.</p>);
+                    break;
+                case 'INVALID_PASSWORD':
+                    errorMessage = (<p>The password is invalid.</p>);
+                    break;
+                default:
+                    errorMessage = null;
+            }
+            //     (
+            //     <p>{this.props.error.message}</p>
+            // );
         }
 
         let authRedirect = null;
@@ -148,12 +246,13 @@ class Auth extends Component {
         return (
             <div className={classes.Auth}>
                 {authRedirect}
+                {this.state.errorMessage}
                 {errorMessage}
                 <form onSubmit={this.submitHandler}>
                     {form}
                     <Button btnType="Success">SUBMIT</Button>
                 </form>
-                <Button btnType="Danger" clicked={this.switchAuthModeHandler}>{this.state.isSignup?'SIGNIN':'SIGNUP'}</Button>
+                <Button btnType="Danger" clicked={this.switchAuthModeHandler}>{this.state.isSignup?'SWITCH TO SIGNIN':'SWITCH TO SIGNUP'}</Button>
             </div>
         );
     }

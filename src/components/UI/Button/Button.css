@@ -1,11 +1,11 @@
 .Button{
-    width: 100px;
+    width: 45%;
     height: 30px;
     margin: 10px;
     padding: 5px;
     background-color: transparent;
     font-weight: bold;
-    border-radius: 5px;
+    border-radius: 20px;
 }
 
 .Button:hover{
